@@ -1,3 +1,34 @@
+# Taiwan Gov Data AI Automation Pipeline (TGD-AI)
+
+## 1. 專案目標 (Project Objectives)
+本專案旨在建立一個全自動化的數據驅動管線，結合台灣政府開放資料 (Taiwan Gov Open Data) 與先進的量子-經典混合運算 (Quantum-Classical Hybrid Computing) 技術。
+* **自動化資料工程：** 透過 GitHub Actions 實現零人工干預的資料擷取與清洗，並以輕量化的 **Toon** 格式進行儲存與版本控制。
+* **高效能運算：** 利用 **Rust** 的記憶體安全性與並發優勢，結合 **holyQASM** 進行量子啟發式演算法或電路模擬。
+* **低延遲通訊與預測告警：** 捨棄傳統 REST 方案，全面採用 **gRPC** 框架進行微服務通訊，確保高吞吐量與低延遲，並針對異常指標實作即時自動化告警。
+
+---
+
+## 2. 系統架構 (System Structure)
+
+```text
+.
+├── .github/
+│   └── workflows/              # GitHub Actions 定期任務 (Cron 1 & 2)
+├── proto/
+│   └── inference.proto         # gRPC 服務定義檔 (Protocol Buffers)
+├── src/
+│   ├── main.rs                 # Rust 後端主程式 (gRPC Server/Client)
+│   ├── data_engine/            # 資料處理與 Toon 格式解析模組
+│   └── quantum_bridge/         # Rust 與 holyQASM 呼叫介面
+├── qasm/
+│   └── logic.qasm              # holyQASM 量子邏輯電路定義
+├── models/                     # 模型配置與量化腳本
+├── Cargo.toml                  # Rust 專案配置 (包含 tonic, prost 等依賴)
+└── build.rs                    # Rust 編譯腳本 (用於編譯 .proto 檔)
+
+
+
+
 階段一：資料獲取與雲端同步 (ETL Pipeline)
 • 觸發： GitHub Action (Cron 1: 每日執行)。
 • 執行：
