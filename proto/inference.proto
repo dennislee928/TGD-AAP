@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package inference;
+
+// InferenceService handles prediction requests from GitHub Actions cron jobs.
+service InferenceService {
+  // Predict sends a feature vector and returns a prediction result.
+  rpc Predict(PredictRequest) returns (PredictResponse);
+
+  // PredictStream supports server-side streaming for batch prediction.
+  rpc PredictStream(PredictRequest) returns (stream PredictResponse);
+}
+
+// PredictRequest carries the input features for a single inference call.
+message PredictRequest {
+  string request_id = 1;
+  repeated float features = 2;
+  map<string, string> metadata = 3;
+}
+
+// PredictResponse returns the model's output along with confidence scores.
+message PredictResponse {
+  string request_id = 1;
+  repeated float predictions = 2;
+  float confidence = 3;
+  bool alert_triggered = 4;
+  string message = 5;
+}
