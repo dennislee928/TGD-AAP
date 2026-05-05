@@ -1,0 +1,20 @@
+{
+  "model_type": "transformer",
+  "hidden_size": 256,
+  "num_attention_heads": 8,
+  "num_hidden_layers": 6,
+  "intermediate_size": 1024,
+  "max_position_embeddings": 512,
+  "vocab_size": 32000,
+  "dropout": 0.1,
+  "activation_function": "gelu",
+  "quantum_feature_map": {
+    "enabled": true,
+    "num_qubits": 4,
+    "qasm_circuit": "qasm/logic.qasm"
+  },
+  "inference": {
+    "alert_threshold": 0.8,
+    "batch_size": 32
+  }
+}

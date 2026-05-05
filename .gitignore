@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Rust build artifacts
+/target/
+
+# Generated protobuf Rust bindings
+src/generated/
+
+# Model weight files (managed on Hugging Face)
+models/weights/
+*.bin
+*.safetensors
+*.pt
+*.ckpt
+
+# Environment / secrets
+.env
+.env.local
+*.key
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
