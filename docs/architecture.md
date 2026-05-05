@@ -20,7 +20,7 @@ TGD-AAP is a Rust-first pipeline composed of three executable paths:
 +-------------------+      gRPC/HTTP2  +------------------------------+
 | grpc_client       | ---------------> | grpc_server (tonic)          |
 | (Cron caller)     |                  | Predict / PredictStream      |
-|                   |                  | (mock inference at present)  |
+|                   |                    |
 +-------------------+                  +------------------------------+
          |
          | HTTPS (on alert)
@@ -85,12 +85,12 @@ Written by `serialize(records)` in `toon.rs`:
 - Authentication points:
   - `HF_TOKEN` bearer token for upload
   - optional `GOV_API_KEY` header
-  - `GRPC_AUTH_TOKEN` currently passed in request payload metadata map
+  - `GRPC_EXPECTED_TOKEN` validated against gRPC `authorization` bearer metadata (legacy payload token still accepted)
 - Server bind:
   - `grpc_server` listens on `[::]:50051`
 
 ## Known Gaps (Current State)
 
-- Inference path uses mock confidence and does not load model weights yet.
-- Request auth is not enforced on server side.
-- Some HTTP paths do not currently enforce strict status checks.
+- Inference path uses a quantum-first scoring path with deterministic classical fallback.
+- mTLS/interceptor hardening is not yet enabled; current auth is shared-token validation.
+- Advanced observability (metrics/tracing export) is still pending.

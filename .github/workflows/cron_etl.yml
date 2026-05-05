@@ -8,6 +8,8 @@ on:
 jobs:
   etl:
     runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,14 +17,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo registry
+      - name: Cache Cargo artifacts
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-etl-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('.github/workflows/cron_etl.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-etl-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-etl-
 
       - name: Build data engine
         run: cargo build --release --bin data_engine
@@ -31,4 +36,5 @@ jobs:
         env:
           GOV_API_KEY: ${{ secrets.GOV_API_KEY }}
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          DATASET_VERSION: ${{ vars.DATASET_VERSION }}
         run: cargo run --release --bin data_engine
