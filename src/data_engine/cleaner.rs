@@ -13,23 +13,65 @@ pub struct CleanRecord {
     pub value: f64,
 }
 
+fn sanitize_required_text(input: String) -> Option<String> {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        None
+    } else {
+        Some(trimmed.to_string())
+    }
+}
+
+fn parse_finite_value(value: serde_json::Value) -> Option<f64> {
+    match value {
+        serde_json::Value::Number(n) => n.as_f64().filter(|v| v.is_finite()),
+        serde_json::Value::String(s) => s
+            .trim()
+            .parse::<f64>()
+            .ok()
+            .filter(|v| v.is_finite()),
+        _ => None,
+    }
+}
+
 /// Validate and clean raw records, discarding malformed entries.
 pub fn clean(raw: Vec<RawRecord>) -> Result<Vec<CleanRecord>> {
     let mut clean = Vec::with_capacity(raw.len());
 
     for record in raw {
-        match record.value.as_f64() {
-            Some(v) if !v.is_nan() => {
-                clean.push(CleanRecord {
-                    id: record.id,
-                    name: record.name,
-                    value: v,
-                });
+        let RawRecord { id, name, value } = record;
+        let id = match sanitize_required_text(id) {
+            Some(v) => v,
+            None => {
+                warn!("Discarding malformed record: reason=empty_id");
+                continue;
             }
-            _ => {
-                warn!("Discarding malformed record id={}", record.id);
+        };
+
+        let name = match sanitize_required_text(name) {
+            Some(v) => v,
+            None => {
+                warn!("Discarding malformed record id={}: reason=empty_name", id);
+                continue;
             }
-        }
+        };
+
+        let value = match parse_finite_value(value) {
+            Some(v) => v,
+            None => {
+                warn!(
+                    "Discarding malformed record id={}: reason=non_finite_or_non_numeric_value",
+                    id
+                );
+                continue;
+            }
+        };
+
+        clean.push(CleanRecord {
+            id,
+            name,
+            value,
+        });
     }
 
     Ok(clean)

@@ -64,4 +64,29 @@ impl QuantumCircuit {
         }
         out
     }
+
+    /// Build a deterministic feature-encoded circuit.
+    ///
+    /// Features are normalized into `[0, 1]`, then mapped to `RY` angles.
+    /// A linear chain of CNOT gates entangles adjacent qubits to make
+    /// correlations observable by the simulator.
+    pub fn from_features(features: &[f32]) -> Self {
+        let num_qubits = features.len().clamp(1, 8);
+        let mut circuit = Self::new(num_qubits);
+
+        for (idx, value) in features.iter().take(num_qubits).enumerate() {
+            let normalized = ((*value as f64) + 1.0) / 2.0;
+            let clamped = normalized.clamp(0.0, 1.0);
+            let theta = clamped * std::f64::consts::PI;
+            circuit.add_gate("ry", vec![idx], vec![theta]);
+        }
+
+        if num_qubits > 1 {
+            for idx in 0..(num_qubits - 1) {
+                circuit.add_gate("cx", vec![idx, idx + 1], vec![]);
+            }
+        }
+
+        circuit
+    }
 }
