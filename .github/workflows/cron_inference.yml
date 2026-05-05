@@ -8,6 +8,8 @@ on:
 jobs:
   inference:
     runs-on: ubuntu-latest
+    env:
+      CARGO_TERM_COLOR: always
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,14 +17,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo registry
+      - name: Cache Cargo artifacts
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-inference-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('.github/workflows/cron_inference.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-inference-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-inference-
 
       - name: Build gRPC client
         run: cargo build --release --bin grpc_client
@@ -34,4 +39,6 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           ALERT_THRESHOLD: ${{ vars.ALERT_THRESHOLD }}
+          MODEL_VERSION: ${{ vars.MODEL_VERSION }}
+          DATASET_VERSION: ${{ vars.DATASET_VERSION }}
         run: cargo run --release --bin grpc_client

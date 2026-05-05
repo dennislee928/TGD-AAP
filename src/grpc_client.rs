@@ -4,6 +4,7 @@
 //! hosted gRPC server and triggers an alert if the threshold is exceeded.
 
 use anyhow::{Context, Result};
+use tonic::metadata::MetadataValue;
 use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 
@@ -30,11 +31,21 @@ async fn main() -> Result<()> {
     info!("Connecting to gRPC server at {}", server_url);
     let mut client = InferenceServiceClient::connect(server_url).await?;
 
-    let request = tonic::Request::new(PredictRequest {
+    let legacy_auth_token = auth_token.clone();
+    let mut request = tonic::Request::new(PredictRequest {
         request_id: uuid::Uuid::new_v4().to_string(),
         features: vec![],
-        metadata: [("auth_token".to_string(), auth_token)].into(),
+        // Backward-compat: keep legacy payload metadata while servers migrate
+        // to transport metadata-based auth.
+        metadata: [("auth_token".to_string(), legacy_auth_token)].into(),
     });
+    if !auth_token.trim().is_empty() {
+        let bearer = format!("Bearer {}", auth_token);
+        let auth_header = MetadataValue::try_from(bearer).context("invalid auth token format")?;
+        request
+            .metadata_mut()
+            .insert("authorization", auth_header);
+    }
 
     let response = client.predict(request).await?.into_inner();
     info!(
